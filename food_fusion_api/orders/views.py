@@ -19,24 +19,23 @@ class OrderView(APIView):
         try:
             with transaction.atomic():
                 user=request.user
-                cart=Cart.objects.prefetch_related('ordercart').get(customer=user)
+                cart=Cart.objects.prefetch_related('ordercart').get(customer=user,ordered=False)
                 try:
                     address=Address.objects.get(entity_type='user',entity_id=user.id)
                 except:
                     return Response({'error':'we are missing your address'})
                 total_price=sum(cartitem.products.price*cartitem.quantity for cartitem in cart.ordercart.all())
-                cart_data=CartCreateSerializer(cart).data
                 checkout=Checkout.objects.create(
                     cart=cart,
                     address=address,
                     total_price=total_price,
-                    cart_data=cart_data,
                     order_status='confermed'
                 )
                 orderitem=OrderItems.objects.create(order_id=checkout,user=user)
                 serializer=OrderItemSerializer(orderitem)
-                cart.delete()
                 response_data=serializer.data
+                cart.ordered=True
+                cart.save()
                 return Response(response_data,status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error':str(e)},status=status.HTTP_400_BAD_REQUEST)

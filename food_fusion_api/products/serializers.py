@@ -14,9 +14,9 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         fields=['restaurant_name','title','catagory','price','content','rating']
 
 #for get a product detail
-class ProductDetailSerializer(serializers.HyperlinkedModelSerializer):
+class ProductDetailSerializer(serializers.ModelSerializer):
     class Meta():
         model=Products
-        fields=['url','title','price','rating','active']
+        fields=['title','price','rating','active']
 
         
