@@ -98,9 +98,10 @@ class BranchSerializer(serializers.ModelSerializer):
 #serializer for retriev restaurants
 class RestaurantListSerializer(serializers.HyperlinkedModelSerializer):
     heigh_rated_products=ProductDetailSerializer(many=True,required=False)
+    cusine=serializers.CharField(source='type')
     class Meta():
         model=Restaurant
-        fields=['url','id','name','contact','type','heigh_rated_products']
+        fields=['url','id','name','contact','cusine','heigh_rated_products']
          
 #serializer for get a specific restaurant to see it's branches
 class RestaurantDetailSerializer(serializers.HyperlinkedModelSerializer):

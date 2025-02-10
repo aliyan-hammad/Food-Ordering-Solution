@@ -20,10 +20,6 @@ def restaurant_retriev_view(request , pk=None):
             restaurant=get_object_or_404(Restaurant,pk=pk)
             serializer=RestaurantDetailSerializer(restaurant,many=False,context={'request':request})
             return Response(serializer.data,status=status.HTTP_200_OK)
-        restaurant_filter=RestaurantFilter(request.query_params,queryset=Restaurant.objects.all())
-        filtered_queryset=restaurant_filter.qs
-        serializer=RestaurantListSerializer(filtered_queryset,many=True,context={'request':request})
-        return Response(serializer.data,status=status.HTTP_200_OK)
     if request.method == 'POST':
         serializer=RestaurantListSerializer(data=request.data,context={'request':request})
         if serializer.is_valid(raise_exception=True):
@@ -60,36 +56,43 @@ class GetNearestRestaurants(APIView):
     permission_classes=[AllowAny]
     def get(self,request):
         try:
-            user_lat=float(request.GET.get('latitude'))
-            user_long=float(request.GET.get('longitude'))
-            print(f"{user_lat}  {user_long}")
-            restaurants=Restaurant.objects.prefetch_related("branches__address")
-            #for get a restaurant with it's all branches with there's address
-            near_by=[]
-            for restaurant in restaurants:
-                #for get a branche of each restaurant's branches
-                for branch in restaurant.branches.all():
-                    branch_lat=branch.address.latitude
-                    branch_long=branch.address.longitude
-                    print(branch_lat)
-                    print(branch_long)
-                    distance=haversine(user_lat,user_long,branch_lat,branch_long)
-                    print(distance)
-                    if distance <= 5.0:
-                        near_by.append(
-                            {'name':restaurant.name,
-                            'distance':round(distance,2),
-                            'branch_url': request.build_absolute_uri(
-                            reverse('branch-detail', kwargs={'pk': branch.id})+f"?distance={round(distance,2)}"
+            user_lat=(request.GET.get('latitude'))
+            user_long=(request.GET.get('longitude'))
+            if user_lat or user_long:
+                user_lat=float(user_lat)
+                user_long=float(user_long)
+                restaurants=Restaurant.objects.prefetch_related("branches__address")
+                #for get a restaurant with it's all branches with there's address
+                near_by=[]
+                for restaurant in restaurants:
+                    #for get a branche of each restaurant's branches
+                    for branch in restaurant.branches.all():
+                        branch_lat=branch.address.latitude
+                        branch_long=branch.address.longitude
+                        distance=haversine(user_lat,user_long,branch_lat,branch_long)
+                        if distance <= 5.0:
+                            near_by.append(
+                                {'name':restaurant.name,
+                                 'cusine':restaurant.type,
+                                'distance':round(distance,2),
+                                'branch_url': request.build_absolute_uri(
+                                reverse('branch-detail', kwargs={'pk': branch.id})+f"?distance={round(distance,2)}",
+                                )
+                                }
                             )
-                            }
-                        )
-            if near_by:
-                sorted_branch_list= sorted(near_by, key=lambda x: x["distance"])
-                total_restaurant=len(near_by)
+                if near_by:
+                    sorted_branch_list= sorted(near_by, key=lambda x: x["distance"])
+                    total_restaurant=len(near_by)
+                    return Response({'total_restaurant':total_restaurant,'nearest_restaurant':sorted_branch_list},status=200)
+
+                else:
+                    return Response({'message':'no nearest restaurant found'})
             else:
-                return Response({'message':'no nearest restaurant found'})
-            return Response({'total_restaurant':total_restaurant,'nearest_restaurant':sorted_branch_list},status=200)
+                restaurant_filter=RestaurantFilter(request.query_params,queryset=Restaurant.objects.all())
+                filtered_queryset=restaurant_filter.qs
+                serializer=RestaurantListSerializer(filtered_queryset,many=True,context={'request':request})
+                return Response(serializer.data,status=status.HTTP_200_OK)
+           
         except Exception as e:
             return Response({'error':str(e)},status=400)
         

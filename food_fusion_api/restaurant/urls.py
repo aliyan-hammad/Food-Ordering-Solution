@@ -10,17 +10,15 @@ from .views import RestaurantDestroyUpdateView,restaurant_retriev_view,BranchCre
 # router.register(f'products',ProductViewSet)
 # router.register(f'orders',OrderCartViewSet)
 urlpatterns = [
-    path('<int:pk>/branch/',branch_retriev_view,name='branch-detail'),  #for get a branch
-    path('<int:pk>/restaurant/',restaurant_retriev_view,name='restaurant-detail'), #for get a restaurant
-    path('restaurant/list/',restaurant_retriev_view,name='restaurant-list'), # for get restaurant's list
-    path('create/restaurant/',restaurant_retriev_view,name='create-instance'), #for create restaurnt
-    path('<int:pk>/update/',RestaurantDestroyUpdateView.as_view(),name='update-instance'), #for updt rstrnt
-    path('<int:pk>/delete/',RestaurantDestroyUpdateView.as_view(),name='destroye-instance'), #for dlt rstrnt
-    path('branch/create/',BranchCreateView.as_view(),name='branch-list'), #for create a new branch
-    path('<int:pk>/branch/update/',BranchUpdateDestroyView.as_view(),name='update-branch'), #for update branch
-    path('<int:pk>/branch/delete/',BranchUpdateDestroyView.as_view(),name='update-delete'), #for delete branch
-    path('nearbyrestaurant/',GetNearestRestaurants.as_view(),name='nearby-restaurants'), #to get nearest rstrnts
-    path('nearbyrestaurant/<int:pk>/',GetNearestRestaurants.as_view(),name='nearby-restaurant') #to get specific rstrnt
+    path('<int:pk>/branch/',branch_retriev_view,name='branch-detail'), 
+    path('<int:pk>/restaurant/',restaurant_retriev_view,name='restaurant-detail'), 
+    # path('restaurant/list/',restaurant_retriev_view,name='restaurant-list'), 
+    path('restaurant/',restaurant_retriev_view,name='create-restaurant'),
+    path('<int:pk>restaurant/',RestaurantDestroyUpdateView.as_view(),name='destroye-update-restaurant'),
+    path('branch/',BranchCreateView.as_view(),name='branch-create'), 
+    path('<int:pk>branch/',BranchUpdateDestroyView.as_view(),name='destroye-update-branch'),
+    path('restaurants/',GetNearestRestaurants.as_view(),name='nearby-restaurants'), 
+    # path('<int:pk>/restaurant/',GetNearestRestaurants.as_view(),name='nearby-restaurant') 
 
 
 ]
