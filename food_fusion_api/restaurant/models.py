@@ -2,7 +2,9 @@ from django.db import models
 from food_fusion_api.validators import validator_contact
 from datetime import time,datetime
 from address.models import Address
+from django.contrib.auth import get_user_model
 
+User=get_user_model()
 # Create your models here.
 class Type(models.TextChoices):
     barBQ='barBQ'
@@ -11,9 +13,11 @@ class Type(models.TextChoices):
 
 
 class Restaurant(models.Model):
+    owner=models.ForeignKey(User,on_delete=models.SET_NULL,related_name='restaurant',null=True,blank=True)
     name=models.CharField(max_length=100,blank=False,null=False,unique=True)
     contact=models.CharField(max_length=11,blank=False,validators=[validator_contact])
     type=models.CharField(max_length=100,choices=Type.choices,default='None')
+    image=models.ImageField(upload_to='restaurant/',null=True,blank=True)
     created_at=models.DateField(auto_now_add=True)
     updated_at=models.DateField(auto_now=True)
 

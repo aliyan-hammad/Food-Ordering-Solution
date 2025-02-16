@@ -1,27 +1,42 @@
-from django.shortcuts import render
+from django.shortcuts import render,get_object_or_404
 from rest_framework import viewsets,generics
 from .models import Products
 from django_filters.rest_framework import DjangoFilterBackend
-from .serializers import ProductCreateSerializer,ProductDetailSerializer
-from rest_framework.permissions import IsAuthenticatedOrReadOnly,IsAdminUser
+from .serializers import ProductDetailSerializer
 from .filters import ProductFilters
-# Create your views here.
-class ProductListCreateView(generics.ListCreateAPIView):
-    permission_classes=[IsAdminUser]
-    queryset=Products.objects.all()
-    serializer_class=ProductCreateSerializer
+from restaurant.models import Restaurant
+from .permissions import IsStaff
+from rest_framework.parsers import MultiPartParser,FormParser,JSONParser
+
 class ProductListView(generics.ListAPIView):
-    # permission_classes=[IsAuthenticatedOrReadOnly]
     queryset=Products.objects.all()
     serializer_class=ProductDetailSerializer
     filter_backends=[DjangoFilterBackend]
     filterset_class=ProductFilters
+    lookup_field='pk'
+
 class ProductDetailApiView(generics.RetrieveAPIView):
-    # permission_classes=[IsAuthenticatedOrReadOnly]
     queryset=Products.objects.all()
     serializer_class=ProductDetailSerializer
+    lookup_field='pk'
     
-class ProductUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes=[IsAdminUser]
-    queryset=Products.objects.all()
-    serializer_class=ProductCreateSerializer
+class ProductsViewSet(viewsets.ModelViewSet):
+    permission_classes=[IsStaff]
+    serializer_class=ProductDetailSerializer
+    parser_classes=(MultiPartParser,FormParser,JSONParser)
+    filter_backends=[DjangoFilterBackend]
+    filterset_class=ProductFilters
+    lookup_field='pk'
+
+    def get_queryset(self):
+        return Products.objects.filter(restaurant__owner=self.request.user)
+    
+    def perform_create(self, serializer):
+        user=self.request.user
+        if serializer.is_valid(raise_exception=True):
+            restaurant=Restaurant.objects.get(owner=user)
+            title=serializer.validated_data.get('title')
+            content=serializer.validated_data.get('content') or None
+            if content is None:
+                content=title
+            serializer.save(restaurant=restaurant,content=content)

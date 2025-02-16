@@ -13,6 +13,7 @@ class Catagory(models.TextChoices):
 
 class Products(models.Model):
     restaurant=models.ForeignKey(Restaurant,default=1,related_name="products",on_delete=models.CASCADE)
+    image=models.ImageField(upload_to='products/',null=True,blank=True)
     title=models.CharField(max_length=100,blank=False,null=False,unique=True)
     catagory=models.CharField(max_length=50,choices=Catagory.choices,default='None')
     price=models.DecimalField(max_digits=10,decimal_places=2,default=Decimal('99.99'))
@@ -25,4 +26,4 @@ class Products(models.Model):
         if self.rating < 0.0 or self.rating > 5:
             raise ValidationError("rating should be between 0 - 5")
     def __str__(self) -> str:
-        return f"{self.title} , {self.rating}"
+        return f"{self.title} ,{self.image.url if self.image else "no image"} {self.rating}"
